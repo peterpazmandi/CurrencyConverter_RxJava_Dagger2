@@ -9,6 +9,7 @@ import com.inspirecoding.currencyconverter.utils.COMPACT_TYPE_ULTRA
 import io.reactivex.Flowable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -16,7 +17,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class MainActivityViewModel @Inject constructor(
-    private val currencyRepository: CurrencyRepository
+    private val currencyRepository: CurrencyRepository,
 ): ViewModel() {
 
     private val TAG = this.javaClass.simpleName
@@ -28,12 +29,30 @@ class MainActivityViewModel @Inject constructor(
     private var compositeDisposable: CompositeDisposable = CompositeDisposable()
 
     var amountToConvert = 0
-    var currencyFrom = "BTC"
-    var currencyTo = "USD"
+    var currencyFrom = ""
+    var currencyTo = ""
 
 
     fun getConversion() {
-        subscribeObservableConversionResult()
+        var errormessage = ""
+
+        if(amountToConvert == 0) {
+            errormessage += "Enter an amount\n"
+        }
+        if(currencyFrom.isEmpty()) {
+            errormessage += "Select a currency type\n"
+        }
+        if(currencyTo.isEmpty()) {
+            errormessage += "Select a converted currency type"
+        }
+
+        if(errormessage.isEmpty()) {
+            subscribeObservableConversionResult()
+        } else {
+            viewModelScope.launch {
+                _events.send(Events.ShowErrorMessage(errormessage))
+            }
+        }
     }
 
     private fun subscribeObservableConversionResult() {
@@ -49,18 +68,20 @@ class MainActivityViewModel @Inject constructor(
             .onBackpressureBuffer()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(
-                { conversionResult ->
-
+            .subscribeBy(
+                onNext = { conversionResult ->
                     val conversion = createConversion(conversionResult.toString())
                     calculateFinalResult(conversion)
-
-                } , { throwable ->
+                },
+                onError = { throwable ->
                     throwable.message?.let { _message ->
                         viewModelScope.launch {
                             _events.send(Events.ShowErrorMessage(_message))
                         }
                     }
+                },
+                onComplete = {
+
                 }
             )
 

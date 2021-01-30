@@ -8,6 +8,7 @@ import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.snackbar.Snackbar
 import com.inspirecoding.currencyconverter.adapter.SpinnerAdapter
 import com.inspirecoding.currencyconverter.databinding.ActivityMainBinding
 import com.inspirecoding.currencyconverter.utils.listOfCountriesWithFlags
@@ -77,8 +78,8 @@ class MainActivity : DaggerAppCompatActivity() {
                         binding.btnConvert.isVisible = true
                         binding.progressBar.isVisible = false
 
-                        Toast.makeText(
-                            this@MainActivity, event.message, Toast.LENGTH_LONG
+                        Snackbar.make(
+                            binding.btnConvert, event.message, Snackbar.LENGTH_LONG
                         ).show()
                     }
                 }

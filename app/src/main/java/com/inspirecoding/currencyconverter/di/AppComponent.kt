@@ -17,7 +17,6 @@ import javax.inject.Singleton
         ActivityBuilderModule::class,
         RetrofitModule::class,
         ViewModelFactoryModule::class,
-        ViewModelsModule::class,
         CurrencyRepositoryModule::class
     ]
 )
